@@ -177,6 +177,7 @@ function env_exports {
 	export CROSS_COMPILE=$KERNEL_DIR/aarch64-linux-android-4.9/bin/aarch64-linux-android-
 	export CROSS_COMPILE_ARM32=$KERNEL_DIR/arm-linux-androideabi-4.9/bin/arm-linux-androideabi-
 	export CC=$KERNEL_DIR/clang-llvm/bin/clang
+	export LD=$KERNEL_DIR/clang-llvm/bin/ld.lld
 	export AR=$KERNEL_DIR/clang-llvm/bin/llvm-ar
 	export NM=$KERNEL_DIR/clang-llvm/bin/llvm-nm
 	export OBJCOPY=$KERNEL_DIR/clang-llvm/bin/llvm-objcopy
@@ -196,6 +197,7 @@ function build_kernel {
 		CROSS_COMPILE=$CROSS_COMPILE \
 		CROSS_COMPILE_ARM32=$CROSS_COMPILE_ARM32 \
 		CC=$CC \
+		LD=$LD \
 		AR=$AR \
 		NM=$NM \
 		OBJCOPY=$OBJCOPY \
