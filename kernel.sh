@@ -27,7 +27,7 @@ ARG3=$3 #Build should be pushed or not [PUSH / NOPUSH]
 DATE=$(TZ=Asia/Jakarta date +"%Y%m%d-%T")
 export ZIPNAME="azure" #Specifies the name of kernel
 #We should fetch the latest clang build from android_googlesource
-export CLANG_URL=https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/0d3a06b3f58c9093ec5b4fb9ebb3ad0ab2d2e489/clang-r370808.tar.gz
+export CLANG_URL=https://kdrag0n.dev/files/redirector/proton_clang-latest.tar.zst
 
 ##----------------------------------------------------##
 
@@ -108,24 +108,11 @@ fi
 
 function clone {
 	echo " "
-	echo "★★Cloning GCC Toolchain from Android GoogleSource .."
-	git clone --progress -j32 --depth 5 --no-single-branch https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9.git
-	git clone --progress -j32 --depth 5 --no-single-branch https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9
-
-	#Workaround to remove deprecation spam of gcc
-	cd aarch64-linux-android-4.9
-	git reset --hard 22f053ccdfd0d73aafcceff3419a5fe3c01e878b
-	cd ../arm-linux-androideabi-4.9
-	git reset --hard 42e5864a7d23921858ca8541d52028ff88acb2b6
-	cd $KERNEL_DIR
-
-	echo "★★GCC cloning done"
-	echo ""
-	echo "★★Cloning Clang 8 sources"
+	echo "★★Cloning Proton clang-10 sources"
 	wget $CLANG_URL
-	mkdir clang-llvm
-	tar -C clang-llvm -xvf clang*.tar.gz
-	rm -rf clang*.tar.gz
+	tar -I zstd -xvf proton_clang-latest.tar.zst
+	rm -rf proton_clang-latest.tar.zst
+	mv proton_clang-10.0.0-20200104 clang-llvm
 	echo "★★Clang Done, Now Its time for AnyKernel .."
 	git clone --depth 1 --no-single-branch https://github.com/Panchajanya1999/AnyKernel2.git -b $ARG1
 	echo "★★Cloning libufdt"
@@ -143,7 +130,7 @@ function exports {
 	export KBUILD_COMPILER_STRING=$($KERNEL_DIR/clang-llvm/bin/clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')
 	LD_LIBRARY_PATH=$KERNEL_DIR/clang-llvm/lib:$KERNEL_DIR/clang-llvm/lib64:$LD_LIBRARY_PATH
 	export LD_LIBRARY_PATH
-	PATH=$KERNEL_DIR/clang-llvm/bin/:$KERNEL_DIR/aarch64-linux-android-4.9/bin/:$PATH
+	PATH=$KERNEL_DIR/clang-llvm/bin/:$PATH
 	export PATH
 	export BOT_MSG_URL="https://api.telegram.org/bot$token/sendMessage"
 	export BOT_BUILD_URL="https://api.telegram.org/bot$token/sendDocument"
@@ -174,8 +161,8 @@ function tg_post_build {
 ##----------------------------------------------------------##
 
 function env_exports {
-	export CROSS_COMPILE=$KERNEL_DIR/aarch64-linux-android-4.9/bin/aarch64-linux-android-
-	export CROSS_COMPILE_ARM32=$KERNEL_DIR/arm-linux-androideabi-4.9/bin/arm-linux-androideabi-
+	export CROSS_COMPILE=$KERNEL_DIR/clang-llvm/aarch64-linux-android-4.9/bin/aarch64-linux-gnu-
+	export CROSS_COMPILE_ARM32=$KERNEL_DIR/clang-llvm/arm-linux-androideabi-4.9/bin/arm-linux-gnueabi-
 	export CC=$KERNEL_DIR/clang-llvm/bin/clang
 	export LD=$KERNEL_DIR/clang-llvm/bin/ld.lld
 	export AR=$KERNEL_DIR/clang-llvm/bin/llvm-ar
