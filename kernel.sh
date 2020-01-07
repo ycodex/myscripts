@@ -136,6 +136,7 @@ function exports {
 	export BOT_BUILD_URL="https://api.telegram.org/bot$token/sendDocument"
 	env_exports
 	export PROCS=$(nproc --all)
+	export BUILD_DTBO=0 #do not build dtbo
 }
 
 ##---------------------------------------------------------##
@@ -191,7 +192,10 @@ function build_kernel {
 		OBJDUMP=$OBJDUMP \
 		STRIP=$STRIP \
 		CLANG_TRIPLE=aarch64-linux-gnu- 2>&1 | tee error.log
-	make O=out dtbo.img
+	if [ $BUILD_DTBO = 1 ] 
+	 then
+		make O=out dtbo.img
+	fi
 	BUILD_END=$(date +"%s")
 	DIFF=$((BUILD_END - BUILD_START))
 	check_img
@@ -212,7 +216,10 @@ function check_img {
 
 function gen_zip {
 	mv $KERNEL_DIR/out/arch/arm64/boot/Image.gz-dtb AnyKernel2/Image.gz-dtb
-	mv $KERNEL_DIR/out/arch/arm64/boot/dtbo.img AnyKernel2/dtbo.img
+	if [ $BUILD_DTBO = 1 ] 
+	 then
+		mv $KERNEL_DIR/out/arch/arm64/boot/dtbo.img AnyKernel2/dtbo.img
+	fi
 	cd AnyKernel2
 	zip -r9 $ZIPNAME-$ARG1-$DATE * -x .git README.md
 	MD5CHECK=$(md5sum $ZIPNAME-$ARG1-$DATE.zip | cut -d' ' -f1)
