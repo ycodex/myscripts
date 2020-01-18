@@ -112,7 +112,7 @@ function clone {
 	wget $CLANG_URL
 	tar -I zstd -xvf proton_clang-latest.tar.zst
 	rm -rf proton_clang-latest.tar.zst
-	mv proton_clang-10.0.0-20200104 clang-llvm
+	mv proton_clang-11.0.0-20200117 clang-llvm
 	echo "★★Clang Done, Now Its time for AnyKernel .."
 	git clone --depth 1 --no-single-branch https://github.com/Panchajanya1999/AnyKernel2.git -b $ARG1
 	echo "★★Cloning libufdt"
