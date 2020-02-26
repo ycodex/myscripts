@@ -55,7 +55,7 @@ DEF_REG=0
 
 # Build dtbo.img (select this only if your source has support to building dtbo.img)
 # 1 is YES | 0 is NO(default)
-BUILD_DTBO=1
+BUILD_DTBO=0
 
 ##------------------------------------------------------##
 
@@ -158,7 +158,7 @@ function build_kernel {
 		OBJDUMP=$OBJDUMP \
 		STRIP=$STRIP \
 		CLANG_TRIPLE=aarch64-linux-gnu- 2>&1 | tee error.log
-	if [ $BUILD_DTBO == 1]
+	if [ $BUILD_DTBO == 1 ]
 	then
 		make O=out dtbo.img
 	fi
@@ -185,7 +185,7 @@ function check_img {
 
 function gen_zip {
 	mv $KERNEL_DIR/out/arch/arm64/boot/Image.gz-dtb AnyKernel2/Image.gz-dtb
-	if [ $BUILD_DTBO == 1]
+	if [ $BUILD_DTBO == 1 ]
 	then
 		mv $KERNEL_DIR/out/arch/arm64/boot/dtbo.img AnyKernel2/dtbo.img
 	fi
