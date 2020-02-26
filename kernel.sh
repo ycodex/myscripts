@@ -1,7 +1,7 @@
  #
  # Script For Building Android arm64 Kernel
  #
- # Copyright (c) 2018-2019 Panchajanya1999 <rsk52959@gmail.com>
+ # Copyright (c) 2018-2020 Panchajanya1999 <rsk52959@gmail.com>
  #
  # Licensed under the Apache License, Version 2.0 (the "License");
  # you may not use this file except in compliance with the License.
@@ -20,87 +20,42 @@
 
 #Kernel building script
 
+##------------------------------------------------------##
+# Basic Informations, COMPULSORY
+
+# The defult directory where the kernel should be placed
 KERNEL_DIR=$PWD
-ARG1=$1 #It is the devicename [generally codename]
-ARG2=$2 #It is the make arguments, whether clean / dirty / def_regs [regenerates defconfig]
-ARG3=$3 #Build should be pushed or not [PUSH / NOPUSH]
-DATE=$(TZ=Asia/Jakarta date +"%Y%m%d-%T")
-export ZIPNAME="azure" #Specifies the name of kernel
-#We should fetch the latest clang build from android_googlesource
-export CLANG_URL=https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/4ca031977e25dc948c4f5bdf941a77e39f43fb37/clang-r370808.tar.gz
 
-##----------------------------------------------------##
+# The name of the Kernel, to name the ZIP
+ZIPNAME="azure"
 
-# START : Arguments Check
-if [ $# -lt 3 ] # 3 arguments is must
-  then
-        echo -e "\nToo less Arguments..!! Provided - $# , Required - 3\nCheck README"
-        return
-  #Get outta
-elif [ $# == 3 ]
-  then
-# START : Argument 1 [ARG1] Check
-case "$ARG1" in
-  "violet" ) # Execute violet function / scripts
-      export DEVICE="Redmi Note 7 Pro [violet]"
-      DEFCONFIG=vendor/violet-perf_defconfig
-      CHATID="-1001245830369"
-  ;;
-  "X00T" ) # Execute X00T function / scripts
-      export DEVICE="ASUS Zenfone Max Pro M1"
-      DEFCONFIG=X00T_defconfig
-      CHATID="-1001181445763"
-  ;;
-  * ) echo -e "\nError..!! Unknown device. Please add device details to script and re-execute\n"
-      return
-  ;;
-esac # END : Argument 1 [ARG2] Check
+# The name of the device for which the kernel is built
+MODEL="Redmi Note 7 Pro"
 
-##----------------------------------------------------##
+# The codename of the device
+DEVICE="violet"
 
-# START : Argument 2 [ARG1] Check
-case "$ARG2" in
-  "clean" ) # Execute Clean build function
-      alias MAKE="make clean && make mrproper && rm -rf out"
-  ;;
-  "dirty" ) # Do not CLEAN
-      
-  ;;
-  "def_reg" ) # Regenerate defconfig
-      export ARCH=arm64
-      export SUBARCH=arm64
-      make O=out $DEFCONFIG
-      mv out/.config $DEFCONFIG
-      echo "Defconfig Regenerated"
-      exit 1;
-  ;;
-  * ) echo -e "\nError..!! Unknown Build Command.\n"
-      return
-  ;;
-esac # END : Argument 2 [ARG2] Check
+# The defconfig which should be used. Get it from config.gz from
+# your device or check source
+DEFCONFIG=vendor/violet-perf_defconfig
 
-##---------------------------------------------------##
+# Clean source prior building. 1 is NO(default) | 0 is YES
+INCREMENTAL=1
 
-#START : Argument 3 [ARG3] Check
-case "$ARG3" in
-  "PUSH" ) # Push build to TG Channel
-      build_push=true
-  ;;
-  "NOPUSH" ) # Do not push
-      build_push=false
-  ;;
-  * ) echo -e "\nError..!! Unknown command. Please refer README.\n"
-      return
-  ;;
-esac # END : Argument 3 [ARG3] Check
+# Push ZIP to Telegram. 1 is YES() | 0 is NO(default)
+PTTG=1
+	if [ $PTTG == 1 ]
+	then
+		# Set Telegram Chat ID
+		CHATID="-1001245830369"
+	fi
 
-##-----------------------------------------------------##
+# Generate a full DEFCONFIG prior building. 1 is YES | 0 is NO(default)
+DEF_REG=0
 
-else
-  echo -e "\nToo many Arguments..!! Provided - $# , Required - 3\nCheck README"
-  return
-#Get outta
-fi
+# Build dtbo.img (select this only if your source has support to building dtbo.img)
+# 1 is YES | 0 is NO(default)
+BUILD_DTBO=1
 
 ##------------------------------------------------------##
 
@@ -108,26 +63,14 @@ fi
 
 function clone {
 	echo " "
-	echo "★★Cloning GCC Toolchain from Android GoogleSource .."
-	git clone --progress -j32 --depth 5 --no-single-branch https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9.git
-	git clone --progress -j32 --depth 5 --no-single-branch https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9
+	echo "★★Cloning Azure Clang 11"
+	git clone --depth=1 https://github.com/Panchajanya1999/clang-llvm.git clang-llvm
 
-	#Workaround to remove deprecation spam of gcc
-	cd aarch64-linux-android-4.9
-	git reset --hard 22f053ccdfd0d73aafcceff3419a5fe3c01e878b
-	cd ../arm-linux-androideabi-4.9
-	git reset --hard 42e5864a7d23921858ca8541d52028ff88acb2b6
-	cd $KERNEL_DIR
+	# Toolchain Directory defaults to clang-llvm
+	TC_DIR=$PWD/clang-llvm
 
-	echo "★★GCC cloning done"
-	echo ""
-	echo "★★Cloning Clang 8 sources"
-	wget $CLANG_URL
-	mkdir clang-llvm
-	tar -C clang-llvm -xvf clang*.tar.gz
-	rm -rf clang*.tar.gz
 	echo "★★Clang Done, Now Its time for AnyKernel .."
-	git clone --depth 1 --no-single-branch https://github.com/Panchajanya1999/AnyKernel2.git -b $ARG1
+	git clone --depth 1 --no-single-branch https://github.com/Panchajanya1999/AnyKernel2.git -b $DEVICE
 	echo "★★Cloning libufdt"
 	git clone https://android.googlesource.com/platform/system/libufdt $KERNEL_DIR/scripts/ufdt/libufdt
 	echo "★★Cloning Kinda Done..!!!"
@@ -140,10 +83,8 @@ function exports {
 	export KBUILD_BUILD_HOST="circleci"
 	export ARCH=arm64
 	export SUBARCH=arm64
-	export KBUILD_COMPILER_STRING=$($KERNEL_DIR/clang-llvm/bin/clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')
-	LD_LIBRARY_PATH=$KERNEL_DIR/clang-llvm/lib:$KERNEL_DIR/clang-llvm/lib64:$LD_LIBRARY_PATH
-	export LD_LIBRARY_PATH
-	PATH=$KERNEL_DIR/clang-llvm/bin/:$KERNEL_DIR/aarch64-linux-android-4.9/bin/:$PATH
+	export KBUILD_COMPILER_STRING=$($TC_DIR/bin/clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')
+	PATH=$TC_DIR/bin/:$PATH
 	export PATH
 	export BOT_MSG_URL="https://api.telegram.org/bot$token/sendMessage"
 	export BOT_BUILD_URL="https://api.telegram.org/bot$token/sendDocument"
@@ -174,23 +115,38 @@ function tg_post_build {
 ##----------------------------------------------------------##
 
 function env_exports {
-	export CROSS_COMPILE=$KERNEL_DIR/aarch64-linux-android-4.9/bin/aarch64-linux-android-
-	export CROSS_COMPILE_ARM32=$KERNEL_DIR/arm-linux-androideabi-4.9/bin/arm-linux-androideabi-
-	export CC=$KERNEL_DIR/clang-llvm/bin/clang
-	export AR=$KERNEL_DIR/clang-llvm/bin/llvm-ar
-	export NM=$KERNEL_DIR/clang-llvm/bin/llvm-nm
-	export OBJCOPY=$KERNEL_DIR/clang-llvm/bin/llvm-objcopy
-	export OBJDUMP=$KERNEL_DIR/clang-llvm/bin/llvm-objdump
-	export STRIP=$KERNEL_DIR/clang-llvm/bin/llvm-strip
+	export CROSS_COMPILE=$TC_DIR/bin/aarch64-linux-gnu-
+	export CROSS_COMPILE_ARM32=$TC_DIR/bin/arm-linux-gnueabi-
+	export CC=$TC_DIR/bin/clang
+	export AR=$TC_DIR/bin/llvm-ar
+	export NM=$TC_DIR/bin/llvm-nm
+	export OBJCOPY=$TC_DIR/bin/llvm-objcopy
+	export OBJDUMP=$TC_DIR/bin/llvm-objdump
+	export STRIP=$TC_DIR/bin/llvm-strip
 }
 
 ##----------------------------------------------------------##
 
 function build_kernel {
-	if [ "$build_push" = true ]; then
-		tg_post_msg "<b>$CIRCLE_BUILD_NUM CI Build Triggered</b>%0A<b>Date : </b><code>$(TZ=Asia/Jakarta date)</code>%0A<b>Device : </b><code>$DEVICE</code>%0A<b>Pipeline Host : </b><code>CircleCI</code>%0A<b>Host Core Count : </b><code>$PROCS</code>%0A<b>Compiler Used : </b><code>$KBUILD_COMPILER_STRING</code>%0a<b>Branch : </b><code>$CIRCLE_BRANCH</code>%0A<b>Status : </b>#Nightly" "$CHATID"
+	if [ $INCREMENTAL == 0 ]
+	then
+		make clean && make mrproper && rm -rf out
 	fi
+
+	if [ "$PTTG" == 1 ]
+ 	then
+		tg_post_msg "<b>$CIRCLE_BUILD_NUM CI Build Triggered</b>%0A<b>Date : </b><code>$(TZ=Asia/Jakarta date)</code>%0A<b>Device : </b><code>$MODEL [$DEVICE]</code>%0A<b>Pipeline Host : </b><code>CircleCI</code>%0A<b>Host Core Count : </b><code>$PROCS</code>%0A<b>Compiler Used : </b><code>$KBUILD_COMPILER_STRING</code>%0a<b>Branch : </b><code>$CIRCLE_BRANCH</code>%0A<b>Status : </b>#Nightly" "$CHATID"
+	fi
+
 	make O=out $DEFCONFIG
+	if [ $DEF_REG == 1]
+	then
+		cp .config arch/arm64/configs/$DEFCONFIG
+		git add arch/arm64/configs/$DEFCONFIG
+		git commit -m "$DEFCONFIG: Regenerate
+								This is an auto-generated commit"
+	fi
+
 	BUILD_START=$(date +"%s")
 	make -j$PROCS O=out \
 		CROSS_COMPILE=$CROSS_COMPILE \
@@ -202,7 +158,10 @@ function build_kernel {
 		OBJDUMP=$OBJDUMP \
 		STRIP=$STRIP \
 		CLANG_TRIPLE=aarch64-linux-gnu- 2>&1 | tee error.log
-	make O=out dtbo.img
+	if [ $BUILD_DTBO == 1]
+	then
+		make O=out dtbo.img
+	fi
 	BUILD_END=$(date +"%s")
 	DIFF=$((BUILD_END - BUILD_START))
 	check_img
@@ -215,7 +174,10 @@ function check_img {
 	    then
 		gen_zip
 	else
-		tg_post_build "error.log" "$CHATID" "<b>Build failed to compile after $((DIFF / 60)) minute(s) and $((DIFF % 60)) seconds</b>"
+		if [ "$PTTG" == 1 ]
+ 		then
+			tg_post_build "error.log" "$CHATID" "<b>Build failed to compile after $((DIFF / 60)) minute(s) and $((DIFF % 60)) seconds</b>"
+		fi
 	fi
 }
 
@@ -223,11 +185,17 @@ function check_img {
 
 function gen_zip {
 	mv $KERNEL_DIR/out/arch/arm64/boot/Image.gz-dtb AnyKernel2/Image.gz-dtb
-	mv $KERNEL_DIR/out/arch/arm64/boot/dtbo.img AnyKernel2/dtbo.img
+	if [ $BUILD_DTBO == 1]
+	then
+		mv $KERNEL_DIR/out/arch/arm64/boot/dtbo.img AnyKernel2/dtbo.img
+	fi
 	cd AnyKernel2
-	zip -r9 $ZIPNAME-$ARG1-$DATE * -x .git README.md
-	MD5CHECK=$(md5sum $ZIPNAME-$ARG1-$DATE.zip | cut -d' ' -f1)
-	tg_post_build $ZIPNAME* "$CHATID" "Build took : $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s) | MD5 Checksum : <code>$MD5CHECK</code>"
+	zip -r9 $ZIPNAME-$DEVICE-$DATE * -x .git README.md
+	MD5CHECK=$(md5sum $ZIPNAME-$DEVICE-$DATE.zip | cut -d' ' -f1)
+	if [ "$PTTG" == 1 ]
+ 	then
+		tg_post_build $ZIPNAME* "$CHATID" "Build took : $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s) | MD5 Checksum : <code>$MD5CHECK</code>"
+	fi
 	cd ..
 }
 
