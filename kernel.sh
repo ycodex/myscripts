@@ -42,7 +42,7 @@ DEFCONFIG=vendor/violet-perf_defconfig
 # Clean source prior building. 1 is NO(default) | 0 is YES
 INCREMENTAL=1
 
-# Push ZIP to Telegram. 1 is YES() | 0 is NO(default)
+# Push ZIP to Telegram. 1 is YES | 0 is NO(default)
 PTTG=1
 	if [ $PTTG == 1 ]
 	then
@@ -56,6 +56,19 @@ DEF_REG=0
 # Build dtbo.img (select this only if your source has support to building dtbo.img)
 # 1 is YES | 0 is NO(default)
 BUILD_DTBO=0
+
+# Check if we are using a dedicated CI ( Continuous Integration ), and
+# set KBUILD_BUILD_VERSION
+if [ $CI == true ]
+then
+	if [ $CIRCLECI ==true ]
+	then
+		export KBUILD_BUILD_VERSION=$CIRCLE_BUILD_NUM
+	fi
+fi
+
+# Set a commit head
+COMMIT_HEAD=$(git log --oneline -1)
 
 ##------------------------------------------------------##
 
@@ -138,7 +151,7 @@ function build_kernel {
 
 	if [ "$PTTG" == 1 ]
  	then
-		tg_post_msg "<b>$CIRCLE_BUILD_NUM CI Build Triggered</b>%0A<b>Date : </b><code>$(TZ=Asia/Jakarta date)</code>%0A<b>Device : </b><code>$MODEL [$DEVICE]</code>%0A<b>Pipeline Host : </b><code>CircleCI</code>%0A<b>Host Core Count : </b><code>$PROCS</code>%0A<b>Compiler Used : </b><code>$KBUILD_COMPILER_STRING</code>%0a<b>Branch : </b><code>$CIRCLE_BRANCH</code>%0A<b>Status : </b>#Nightly" "$CHATID"
+		tg_post_msg "<b>$CIRCLE_BUILD_NUM CI Build Triggered</b>%0A<b>Date : </b><code>$(TZ=Asia/Jakarta date)</code>%0A<b>Device : </b><code>$MODEL [$DEVICE]</code>%0A<b>Pipeline Host : </b><code>CircleCI</code>%0A<b>Host Core Count : </b><code>$PROCS</code>%0A<b>Compiler Used : </b><code>$KBUILD_COMPILER_STRING</code>%0a<b>Branch : </b><code>$CIRCLE_BRANCH</code>%0A<b>Top Commit : </b><code>$COMMIT_HEAD</code>%0A<b>Status : </b>#Nightly" "$CHATID"
 	fi
 
 	make O=out $DEFCONFIG
