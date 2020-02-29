@@ -59,6 +59,9 @@ BUILD_DTBO=0
 
 ##------------------------------------------------------##
 
+# Set Date 
+DATE=$(TZ=Asia/Jakarta date +"%Y%m%d-%T")
+
 #Now Its time for other stuffs like cloning, exporting, etc
 
 function clone {
