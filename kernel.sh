@@ -61,7 +61,7 @@ BUILD_DTBO=0
 # set KBUILD_BUILD_VERSION
 if [ $CI == true ]
 then
-	if [ $CIRCLECI ==true ]
+	if [ $CIRCLECI == true ]
 	then
 		export KBUILD_BUILD_VERSION=$CIRCLE_BUILD_NUM
 	fi
