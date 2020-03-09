@@ -20,8 +20,10 @@
 
 #Kernel building script
 
+set -euo pipefail
+
 ##------------------------------------------------------##
-# Basic Informations, COMPULSORY
+##----------Basic Informations, COMPULSORY--------------##
 
 # The defult directory where the kernel should be placed
 KERNEL_DIR=$PWD
@@ -67,10 +69,11 @@ then
 	fi
 fi
 
+##------------------------------------------------------##
+##---------Do Not Touch Anything Beyond This------------##
+
 # Set a commit head
 COMMIT_HEAD=$(git log --oneline -1)
-
-##------------------------------------------------------##
 
 # Set Date 
 DATE=$(TZ=Asia/Jakarta date +"%Y%m%d-%T")
@@ -104,7 +107,6 @@ function exports {
 	export PATH
 	export BOT_MSG_URL="https://api.telegram.org/bot$token/sendMessage"
 	export BOT_BUILD_URL="https://api.telegram.org/bot$token/sendDocument"
-	env_exports
 	export PROCS=$(nproc --all)
 }
 
@@ -126,19 +128,6 @@ function tg_post_build {
 	-F "disable_web_page_preview=true" \
 	-F "parse_mode=html" \
 	-F caption="$3"  
-}
-
-##----------------------------------------------------------##
-
-function env_exports {
-	export CROSS_COMPILE=$TC_DIR/bin/aarch64-linux-gnu-
-	export CROSS_COMPILE_ARM32=$TC_DIR/bin/arm-linux-gnueabi-
-	export CC=$TC_DIR/bin/clang
-	export AR=$TC_DIR/bin/llvm-ar
-	export NM=$TC_DIR/bin/llvm-nm
-	export OBJCOPY=$TC_DIR/bin/llvm-objcopy
-	export OBJDUMP=$TC_DIR/bin/llvm-objdump
-	export STRIP=$TC_DIR/bin/llvm-strip
 }
 
 ##----------------------------------------------------------##
@@ -165,18 +154,17 @@ function build_kernel {
 
 	BUILD_START=$(date +"%s")
 	make -j$PROCS O=out \
-		CROSS_COMPILE=$CROSS_COMPILE \
-		CROSS_COMPILE_ARM32=$CROSS_COMPILE_ARM32 \
-		CC=$CC \
-		AR=$AR \
-		NM=$NM \
-		OBJCOPY=$OBJCOPY \
-		OBJDUMP=$OBJDUMP \
-		STRIP=$STRIP \
-		CLANG_TRIPLE=aarch64-linux-gnu- 2>&1 | tee error.log
+		CROSS_COMPILE=aarch64-linux-gnu- \
+		CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+		CC=clang \
+		AR=llvm-ar \
+		NM=llvm-nm \
+		OBJCOPY=llvm-objcopy \
+		OBJDUMP=llvm-objdump \
+		STRIP=llvm-strip 2>&1 | tee error.log
 	if [ $BUILD_DTBO == 1 ]
 	then
-		make O=out dtbo.img
+		make O=out dtbo.img CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi-
 	fi
 	BUILD_END=$(date +"%s")
 	DIFF=$((BUILD_END - BUILD_START))
