@@ -102,15 +102,6 @@ function clone {
 	# Toolchain Directory defaults to clang-llvm
 	TC_DIR=$PWD/clang-llvm
 
-	# Fix DTBO building, as it needs arm-gcc
-	if [ $BUILD_DTBO == 1 ]
-	then
-		cd $TC_DIR/bin;
-		wget https://github.com/kdrag0n/arm-eabi-gcc/raw/9.x/bin/arm-eabi-gcc
-		mv arm-eabi-gcc arm-linux-gnueabi-gcc
-		cd $KERNEL_DIR
-	fi
-
 	echo "★★Clang Done, Now Its time for AnyKernel .."
 	git clone --depth 1 --no-single-branch https://github.com/Panchajanya1999/AnyKernel2.git -b $DEVICE
 	echo "★★Cloning libufdt"
@@ -189,7 +180,8 @@ function build_kernel {
 	if [ $BUILD_DTBO == 1 ]
 	then
 		tg_post_msg "Building DTBO.." "$CHATID"
-		make O=out dtbo.img CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+		python2 "$KERNEL_DIR/scripts/ufdt/libufdt/utils/src/mkdtboimg.py" \
+			create "$KERNEL_DIR/out/arch/arm64/boot/dtbo.img" --page_size=4096 "$KERNEL_DIR/out/arch/arm64/boot/dts/qcom/sm6150-idp-overlay.dtbo"
 	fi
 	BUILD_END=$(date +"%s")
 	DIFF=$((BUILD_END - BUILD_START))
