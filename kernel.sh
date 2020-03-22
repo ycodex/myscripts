@@ -57,7 +57,7 @@ DEF_REG=0
 
 # Build dtbo.img (select this only if your source has support to building dtbo.img)
 # 1 is YES | 0 is NO(default)
-BUILD_DTBO=0
+BUILD_DTBO=1
 
 # Sign the zipfile
 # 1 is YES | 0 is NO
@@ -101,6 +101,15 @@ function clone {
 
 	# Toolchain Directory defaults to clang-llvm
 	TC_DIR=$PWD/clang-llvm
+
+	# Fix DTBO building, as it needs arm-gcc
+	if [ $BUILD_DTBO == 1 ]
+	then
+		cd $TC_DIR/bin;
+		wget https://github.com/kdrag0n/arm-eabi-gcc/raw/9.x/bin/arm-eabi-gcc
+		mv arm-eabi-gcc arm-linux-gnueabi-gcc
+		cd $KERNEL_DIR
+	fi
 
 	echo "★★Clang Done, Now Its time for AnyKernel .."
 	git clone --depth 1 --no-single-branch https://github.com/Panchajanya1999/AnyKernel2.git -b $DEVICE
@@ -179,6 +188,7 @@ function build_kernel {
 		STRIP=llvm-strip 2>&1 | tee error.log
 	if [ $BUILD_DTBO == 1 ]
 	then
+		tg_post_msg "Building DTBO.." "$CHATID"
 		make O=out dtbo.img CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi-
 	fi
 	BUILD_END=$(date +"%s")
