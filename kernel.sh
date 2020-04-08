@@ -79,7 +79,7 @@ SIGN=1
 
 ## Set defaults first
 export KBUILD_BUILD_HOST=$hostname
-export CI_BRANCH=$(git branch --show-current)
+export CI_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
 ## Check for CI
 if [ ! -z "$CI" ]
