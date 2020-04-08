@@ -232,6 +232,9 @@ function gen_zip {
 	cd AnyKernel2 || exit
 	zip -r9 $ZIPNAME-$DEVICE-"$DATE" * -x .git README.md
 
+	## Prepare a final zip variable
+	ZIP_FINAL="$ZIPNAME-$DEVICE-"$DATE".zip"
+
 	if [ $SIGN = 1 ]
 	then
 		## Sign the zip before sending it to telegram
@@ -241,11 +244,12 @@ function gen_zip {
  		fi
 		curl -sLo zipsigner-3.0.jar https://raw.githubusercontent.com/baalajimaestro/AnyKernel2/master/zipsigner-3.0.jar
 		java -jar zipsigner-3.0.jar $ZIPNAME-$DEVICE-"$DATE".zip $ZIPNAME-$DEVICE-"$DATE"-signed.zip
+		ZIP_FINAL="$ZIPNAME-$DEVICE-"$DATE"-signed.zip"
 	fi
 
 	if [ "$PTTG" = 1 ]
  	then
-		tg_post_build $ZIPNAME-$DEVICE-"$DATE"-signed.zip "$CHATID" "Build took : $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)"
+		tg_post_build $ZIP_FINAL "$CHATID" "Build took : $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)"
 	fi
 	cd ..
 }
