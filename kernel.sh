@@ -27,7 +27,7 @@
 KERNEL_DIR=$PWD
 
 # The name of the Kernel, to name the ZIP
-ZIPNAME="azure"
+ZIPNAME="Notkernel"
 
 # The name of the device for which the kernel is built
 MODEL="Redmi Note 7 Pro"
@@ -43,7 +43,7 @@ DEFCONFIG=vendor/violet-perf_defconfig
 INCREMENTAL=1
 
 # Push ZIP to Telegram. 1 is YES | 0 is NO(default)
-PTTG=1
+PTTG=0
 	if [ $PTTG = 1 ]
 	then
 		# Set Telegram Chat ID
@@ -130,15 +130,15 @@ function clone {
 ##------------------------------------------------------##
 
 function exports {
-	export KBUILD_BUILD_USER="panchajanya"
+	export KBUILD_BUILD_USER="ycodex"
 	export ARCH=arm64
 	export SUBARCH=arm64
 	KBUILD_COMPILER_STRING=$("$TC_DIR"/bin/clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')
 	export KBUILD_COMPILER_STRING
 	PATH=$TC_DIR/bin/:$PATH
 	export PATH
-	export BOT_MSG_URL="https://api.telegram.org/bot$token/sendMessage"
-	export BOT_BUILD_URL="https://api.telegram.org/bot$token/sendDocument"
+# 	export BOT_MSG_URL="https://api.telegram.org/bot$token/sendMessage"
+# 	export BOT_BUILD_URL="https://api.telegram.org/bot$token/sendDocument"
 	export PROCS=$(nproc --all)
 }
 
